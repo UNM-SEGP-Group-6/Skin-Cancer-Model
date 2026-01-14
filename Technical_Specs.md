@@ -5,6 +5,7 @@
 # Programming Guidelines
 - Use [BSD KNF-style](https://en.wikipedia.org/wiki/Indentation_style#BSD%20KNF:~:text=%5B20%5D-,BSD%20KNF,-%5Bedit%5D) code blocks & indentation.
 - Avoid the usage of negative conditionals.
+- Tensorflow will be used as it has the edge in terms of customizability & features in addition to its ease of use when converting to a mobile format (TFLite).
 
 # Mobile Security
 - [MASVS](https://mas.owasp.org/MASVS/)
