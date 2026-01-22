@@ -3,14 +3,16 @@ CNN Model to be trained on the MRA-MIDAS dataset.
 
 MRA-MIDAS Dataset Source: https://doi.org/10.71718/15nz-jv40
 
-# Prerequisites:
+## Prerequisites:
 - **Python** 3.12
 -  **pip** package manager
     ```
-    pip (Check if pip is installed/cd'd to the correct directory)
+    pip
     pip install --upgrade pip
     python.exe -m pip install --upgrade pip
-    pip install tensorflow
+    pip install tensorflow==2.20.0
+    pip install matplotlib==3.10.8
+    pip install numpy==2.4.1
     ```
     ### Troubleshooting:
     - If you receive a Protobuf gencode version error try running the following command or modify it to install the desired version.
@@ -19,8 +21,7 @@ MRA-MIDAS Dataset Source: https://doi.org/10.71718/15nz-jv40
     OR
     pip install protobuf==[desired_version_number]
     ```
-
-# Dataset Instructions:
+## Dataset Instructions:
 1. Acquire the Dataset link from [here](https://aimi.stanford.edu/datasets/mra-midas-Multimodal-Image-Dataset-for-AI-based-Skin-Cancer).
 2. Download AZCopy from [here](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10?tabs=windows).
 3. Open Command Prompt as Administrator.
