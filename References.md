@@ -1,1 +1,0 @@
-1. [TFLite Conversion and Android SDK Integration](https://www.youtube.com/watch?v=yV9nrRIC_R0)

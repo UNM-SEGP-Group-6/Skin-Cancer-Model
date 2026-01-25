@@ -1,0 +1,5 @@
+# Ignore Excel Sheets
+release_midas.xlsx
+
+# Ignore Misc Documents
+Technical_Specs.md

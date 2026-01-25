@@ -13,6 +13,7 @@ MRA-MIDAS Dataset Source: https://doi.org/10.71718/15nz-jv40
     pip install tensorflow==2.20.0
     pip install matplotlib==3.10.8
     pip install numpy==2.4.1
+    
     ```
     ### Troubleshooting:
     - If you receive a Protobuf gencode version error try running the following command or modify it to install the desired version.
