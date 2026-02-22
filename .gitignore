@@ -1,5 +1,11 @@
-# Ignore Excel Sheets
-release_midas.xlsx
+# Models & Pickle related
+*.pth
+*.pkl
 
-# Ignore Misc Documents
-Technical_Specs.md
+# Ignore Datasets
+*.csv
+*.xlsx
+
+# Ignoring Original MRA-MIDAS implementation, References & Technical Notes
+V0.1 - MRA-MIDAS
+Misc Documents
