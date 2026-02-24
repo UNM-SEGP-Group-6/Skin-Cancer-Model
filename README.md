@@ -17,3 +17,4 @@ Multimodal approach towards classifying skin cancer using transfer learning with
         OR
         pip install protobuf==[desired_version_number]
         ```
+    - Various errors can take place due to the images becoming corrupted at any point (e.g. Preprocessing, Extracting, Training, etc), in which case, it is advised to store the .zip file of the dataset in a separate location and extract it again.
