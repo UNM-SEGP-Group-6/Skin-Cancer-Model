@@ -1,7 +1,8 @@
 # Models, Pickle, JSON (Training History) related
 *.pth
 *.pkl
-*.json              
+*.json
+*.0                     
 
 # Ignore Datasets
 *.csv
@@ -10,3 +11,4 @@
 # Ignoring Original MRA-MIDAS implementation, References & Technical Notes
 V0.1 - MRA-MIDAS
 Misc Documents
+V0.2/wandb
