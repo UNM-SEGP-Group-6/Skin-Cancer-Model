@@ -2,7 +2,9 @@
 *.pth
 *.pkl
 *.json
-*.0                     
+*.0 
+*.1 
+*.2
 
 # Ignore Datasets
 *.csv
@@ -11,4 +13,3 @@
 # Ignoring Original MRA-MIDAS implementation, References & Technical Notes
 V0.1 - MRA-MIDAS
 Misc Documents
-V0.2/wandb
