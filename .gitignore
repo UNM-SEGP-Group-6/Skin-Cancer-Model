@@ -1,7 +1,10 @@
 # Models, Pickle, JSON (Training History) related
 *.pth
 *.pkl
-*.json              
+*.json
+*.0 
+*.1 
+*.2
 
 # Ignore Datasets
 *.csv
