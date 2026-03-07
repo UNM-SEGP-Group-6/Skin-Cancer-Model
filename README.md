@@ -9,7 +9,7 @@ Multimodal approach towards classifying skin cancer using transfer learning with
 ## Installation Steps:
 - Clone the repository:
     ```
-    git clone https://github.com/your-username/skin-cancer-classification.git
+    git clone [INSERT GITHUB REPO LINK]
     cd skin-cancer-classification
     ```
     ---
@@ -40,7 +40,7 @@ Multimodal approach towards classifying skin cancer using transfer learning with
 ## Tensorboard & WANDB
 - To test Tensorboard:
     ```
-    tensorboard --logdir "c:\Users\User1\Documents\GitHub\CNN\V0.2" --port 6070
+    tensorboard --logdir "c:\Insert\Runs\Path\Here" --port 6070
     ```
 - To test WANDB:
     ```
