@@ -37,14 +37,10 @@ Multimodal approach towards classifying skin cancer using transfer learning with
         - Note:
             This step is recommended if you are using the Notebook during the prototyping steps.
 
-## Tensorboard & WANDB
-- To test Tensorboard:
+## Tensorboard
+- To open Tensorboard:
     ```
     tensorboard --logdir "c:\Insert\Runs\Path\Here" --port 6070
-    ```
-- To test WANDB:
-    ```
-    wandb login
     ```
 
 ## Troubleshooting:
