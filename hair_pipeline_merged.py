@@ -60,6 +60,7 @@ import numpy as np
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
+from lesion_processing import extract_features
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -95,9 +96,14 @@ class ProcessResult:
     hair_pct: float = 0.0
     removal_applied: bool = False
     # General
-    status: str = "ok"        # ok | no_hair | skipped | error
+    status: str = "ok"        # ok | ok_no_hair | skipped | error
     error_msg: str = ""
     elapsed_ms: float = 0.0
+    #lesion features
+    lesion_area: float = 0.0
+    lesion_circularity: float = 0.0
+    lesion_asymmetry: float = 0.0
+    lesion_color_variance: float = 0.0
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -454,6 +460,9 @@ def process_single_image(
 
     result = ProcessResult(name=src.stem, src_path=src_path, dst_path=dst_path)
 
+    result.hair_pct = 0.0
+    result.removal_applied = False
+
     # Resume mode
     if resume and dst.exists():
         result.status = "skipped"
@@ -482,62 +491,117 @@ def process_single_image(
         except Exception:
             pass  # visual saving failure should never abort processing
 
-    # Stage 1 says NO HAIR → skip Stage 2
-    if not detection["has_hair"]:
-        result.status = "no_hair"
-        if copy_clean:
-            raw = cv2.imread(src_path)
-            if raw is not None:
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                _save_image(raw, dst, quality, ext)
-                result.dst_path = str(dst)
-        result.elapsed_ms = (time.perf_counter() - t0) * 1000
-        return result
-
-    # ── STAGE 2: DullRazor Hair Removal ──────────────────────────────────────
-    # Only reached when Stage 1 confirmed hair presence.
+    # Load image
     raw = cv2.imread(src_path)
     if raw is None:
         result.status = "error"
         result.error_msg = "Stage2: cv2.imread returned None"
         result.elapsed_ms = (time.perf_counter() - t0) * 1000
         return result
+    
+    # Default become no hair
+    hairless = raw 
+    result.status  = "ok_no_hair"
 
-    try:
-        should_remove, hair_pct, _diff, mask = stage2_build_hair_mask(
-            raw, removal_threshold_pct
-        )
-    except Exception as e:
-        result.status = "error"
-        result.error_msg = f"Stage2 mask: {e}"
-        result.elapsed_ms = (time.perf_counter() - t0) * 1000
-        return result
-
-    result.hair_pct = hair_pct
-
-    if not should_remove:
-        # Stage 1 flagged hair but Stage 2 pixel coverage is below removal threshold
-        result.status = "no_hair"
+    # If no hair and copy_clean is enabled ,save directly
+    if not detection["has_hair"]:
         if copy_clean:
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            _save_image(raw, dst, quality, ext)
-            result.dst_path = str(dst)
-        result.elapsed_ms = (time.perf_counter() - t0) * 1000
-        return result
+            try:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                _save_image(raw, dst, quality, ext)
+                result.dst_path = str(dst)
+            except Exception as e:
+                result.status = "error"
+                result.error_msg = f"Copy clean failed: {e}"
 
+    # ── STAGE 2: DullRazor Hair Removal ───────────────────────────────────
+    if  detection["has_hair"]:
+        try:
+            should_remove, hair_pct, _diff, mask = stage2_build_hair_mask(
+                raw, removal_threshold_pct
+            )
+            result.hair_pct = hair_pct
+
+        except Exception as e:
+            result.status = "error"
+            result.error_msg = f"Stage2 mask: {e}"
+            result.elapsed_ms = (time.perf_counter() - t0) * 1000
+            return result
+
+        if  should_remove:
+            try:
+                hairless = stage2_inpaint(raw, mask)
+                result.removal_applied = True
+                result.status = "ok"
+            except Exception as e:
+                result.status = "error"
+                result.error_msg = f"Stage2 inpaint: {e}"
+                result.elapsed_ms = (time.perf_counter() - t0) * 1000
+
+    #Added the lesion processing step here to ensure it runs after hair removal and before saving the final image.
     try:
-        hairless = stage2_inpaint(raw, mask)
-    except Exception as e:
-        result.status = "error"
-        result.error_msg = f"Stage2 inpaint: {e}"
-        result.elapsed_ms = (time.perf_counter() - t0) * 1000
-        return result
 
+        h, w = hairless.shape[:2]
+
+        # Auto segmentation of lesion area using Otsu's thresholding on the hairless image.
+        #can be integrated to user defined the lesion area later on (APP interface)
+        gray = cv2.cvtColor(hairless, cv2.COLOR_BGR2GRAY)
+
+        # Adaptive thresholding
+        mask = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,21,5)
+
+        # Clean mask
+        kernel = np.ones((5,5), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+        # Find largest contour (assume lesion)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        bbox = None
+        
+        if contours:
+            c = max(contours, key=cv2.contourArea)
+            area = cv2.contourArea(c)
+
+            #  Add a sanity check to ensure the detected lesion area is within reasonable bounds (not too small or too large)
+            if area > 500 and area < (h * w * 0.7):
+                x, y, w_box, h_box = cv2.boundingRect(c)
+                bbox = (x, y, w_box, h_box)
+            
+        try:
+            if bbox is not None: 
+                lesion_features = extract_features(hairless, bbox)
+            else:
+                raise ValueError("Invalid Bbox")
+            
+        except Exception:
+            fallback_bbox = (int(w*0.3), int(h*0.3), int(w*0.4), int(h*0.4))
+
+            try:
+                lesion_features = extract_features(hairless, fallback_bbox)
+
+            except Exception :
+                lesion_features = {
+                    "area": 0.0,
+                    "circularity": 0.0,
+                    "asymmetry": 0.0,
+                    "color_variance": 0.0
+                }
+
+        result.lesion_area = lesion_features["area"] / (h * w)
+        result.lesion_circularity = lesion_features["circularity"]
+        result.lesion_asymmetry = lesion_features["asymmetry"]
+        result.lesion_color_variance = lesion_features["color_variance"]   / (255.0 ** 2)
+
+    except Exception as e:
+        #Log but DO NOT break pipeline
+        result.error_msg += f" | lesion: {e}"
+
+    # Save final hairless image (or original if no hair detected and copy_clean is False)
     try:
         dst.parent.mkdir(parents=True, exist_ok=True)
         _save_image(hairless, dst, quality, ext)
         result.dst_path = str(dst)
-        result.removal_applied = True
     except Exception as e:
         result.status = "error"
         result.error_msg = f"Stage2 save: {e}"
@@ -756,7 +820,7 @@ def main():
     hairy_paths  = []
     names_hair   = []
     names_no_hair = []
-    counters     = {"ok": 0, "no_hair": 0, "skipped": 0, "error": 0}
+    counters     = {"ok": 0, "ok_no_hair": 0, "skipped": 0, "error": 0}
     total_hair_pct = []
     t_start      = time.perf_counter()
 
@@ -820,7 +884,8 @@ def main():
             "stage1_label", "stage1_confidence",
             "score_blackhat", "score_lines", "score_fft", "score_thin",
             "stage2_hair_pct", "stage2_removal_applied",
-            "status", "error_msg", "elapsed_ms",
+            "status", "error_msg", "elapsed_ms","lesion_area",
+            "lesion_circularity","lesion_asymmetry","lesion_color_variance"
         ])
         for r in report_rows:
             writer.writerow([
@@ -829,6 +894,8 @@ def main():
                 r.score_blackhat, r.score_lines, r.score_fft, r.score_thin,
                 r.hair_pct, r.removal_applied,
                 r.status, r.error_msg, f"{r.elapsed_ms:.1f}",
+                r.lesion_area,r.lesion_circularity,r.lesion_asymmetry,
+                r.lesion_color_variance
             ])
 
     # ── Save filtered image lists ─────────────────────────────────────────────
