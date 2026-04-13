@@ -9,10 +9,10 @@ class MultimodalSkinCancerModel(nn.Module):
     Multimodal skin cancer classification model combining image and clinical metadata.
 
     Architecture:
-        - Image backbone: EfficientNet-B0 (pretrained, optionally frozen) -> 1280-d features
+        - Image backbone: EfficientNet-B0 (pretrained, optionally frozen) (B0: 1280, B1: 1280, B2: 1408, B3: 1536, B4: 1792, B5: 2048, B6: 2304, B7: 2560) -> X-d features
         - Metadata branch: MLP (metadata_dim -> 64 -> 32) with ReLU + Dropout
-        - Fusion: Concatenate image + metadata features (1280 + 32 = 1312-d)
-        - Classifier: MLP (1312 -> 512 -> num_classes) with ReLU + Dropout
+        - Fusion: Concatenate image + metadata features (X + 32 = X+32-d)
+        - Classifier: MLP (X -> 512 -> num_classes) with ReLU + Dropout
 
     Parameters:
         num_classes (int): Number of output classes. Default: 8.

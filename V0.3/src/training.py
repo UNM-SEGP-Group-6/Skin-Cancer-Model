@@ -46,7 +46,7 @@ class EarlyStopping:
         self.counter += 1
         return self.counter >= self.patience    # stop if patience exceeded
 
-def train_one_epoch(model, loader, criterion, optimizer, device, accumulation_steps=2):
+def train_one_epoch(model, loader, criterion, optimizer, device, accumulation_steps=cfg.train.accumulation_steps):
     """
     Train the model for one epoch and return average loss and accuracy.
 
