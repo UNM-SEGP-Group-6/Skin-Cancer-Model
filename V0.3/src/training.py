@@ -12,8 +12,8 @@ class EarlyStopping:
     early stopping if no improvement exceeds min_delta for `patience` epochs.
 
     Parameters:
-        patience (int): Number of epochs to wait before stopping. Default: 7.
-        min_delta (float): Minimum improvement to qualify as progress. Default: 0.001.
+        patience (int): Number of epochs to wait before stopping. Default: cfg.train.patience.
+        min_delta (float): Minimum improvement to qualify as progress. Default: cfg.train.min_delta.
     """
 
     def __init__(self, patience=cfg.train.patience, min_delta=cfg.train.min_delta):

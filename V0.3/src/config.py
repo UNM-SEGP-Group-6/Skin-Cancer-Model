@@ -7,7 +7,7 @@ from typing import Tuple
 @dataclass
 class DataConfig:
     """Data loading and preprocessing parameters."""
-    img_size: int = 224             # Fixed Input Size
+    img_size: int = 484             # Fixed Input Size
     batch_size: int = 8             # Batch Size of images
     num_workers: int = 0            # Set to 0 on windows, 4+ on Linux/Colab/Kaggle
     test_size: float = 0.30         # 70/15/15 splits
@@ -17,11 +17,11 @@ class DataConfig:
 @dataclass
 class AugmentConfig:
     """Training augmentation parameters."""
-    rotation: int = 20                                  # Rotation range (degrees, positive & negative)
-    brightness: float = 0.2                             # Brightness range (fractional)
-    contrast: float = 0.2                               # Contrast range (fractional)
-    saturation: float = 0.2                             # Saturation range (fractional)
-    hue: float = 0.1                                    # Hue range (fractional)
+    rotation: int = 30                                  # Rotation range (degrees, positive & negative)
+    brightness: float = 0.3                             # Brightness range (fractional)
+    contrast: float = 0.25                               # Contrast range (fractional)
+    saturation: float = 0.25                             # Saturation range (fractional)
+    hue: float = 0.15                                    # Hue range (fractional)
     translate: Tuple[float, float] = (0.1, 0.1)         # Translation range (fractional)
     scale: Tuple[float, float] = (0.9, 1.1)             # Scale range (fractional)
     flip_p: float = 0.5                                 # Probability of horizontal & vertical flip
@@ -30,7 +30,7 @@ class AugmentConfig:
 @dataclass
 class ModelConfig:
     """Model architecture parameters."""
-    backbone: str = "efficientnet_b5"                   # Backbone Model to use
+    backbone: str = "efficientnet_b1"                   # Backbone Model to use
     pretrained: bool = True                             # Pretrained weights
     freeze_backbone: bool = True                        # Freeze backbone layers during early training (epochs 1 - unfreeze_epoch)   
 
@@ -53,7 +53,7 @@ class TrainConfig:
 
     patience: int = 10                          # Number of epochs to wait before early stopping.
     min_delta: float = 0.001                    # Minimum change in the monitored quantity to qualify as an improvement.
-    label_smoothing: float = 0.1                # Label smoothing factor for FocalLoss (0.0 = disabled).
+    label_smoothing: float = 0.15               # Label smoothing factor for FocalLoss (0.0 = disabled).
 
 @dataclass
 class Config:
