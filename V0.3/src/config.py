@@ -65,10 +65,21 @@ class Config:
 
 cfg = Config()
 
-DATA_ROOT = Path(r"C:\Users\User1\Desktop\datasets")
+DATA_ROOT = Path(".") # Default to current directory
 
 PATHS = {}
 
+def set_num_workers() -> int:
+    if os.name == 'nt':
+        cfg.data.num_workers = 0
+        return 0
+    else: 
+        cfg.data.num_workers = 4
+        return 4
+
+"""
+TODO: Could potentially cut it down in size but it currently works as is.
+"""
 def detect_os_set_paths():
     global PATHS
     
@@ -102,8 +113,6 @@ def detect_os_set_paths():
                 "images"   : DATA_ROOT / "ISIC2019" / "ISIC_2019_Training_Input" / "ISIC_2019_Training_Input"
             },
         }
-
-        cfg.data.num_workers = 0
 
     # Kaggle Pathing
     elif os.environ.get('KAGGLE_KERNEL_RUN_TYPE') is not None:
@@ -148,8 +157,6 @@ def detect_os_set_paths():
                 'metadata': Path('/kaggle/input/datasets/mahdavi1202/skin-cancer/metadata.csv')
             }
         }
-        
-        cfg.data.num_workers = 4
 
     # Colab & UNIX/Linux Pathing
     elif "COLAB_GPU" in os.environ or os.name == "posix":
@@ -179,43 +186,37 @@ def detect_os_set_paths():
                 'metadata': Path('/kaggle/input/skin-cancer/metadata.csv')
             }
         }
-        cfg.data.num_workers = 4
 
     # For other OS's/systems.
     else:
         print(f"Running on an unidentified OS type: {os.name}")
-        print("Refer to Cell 1.2, download the datasets and insert the paths accordingly.\n")
+        print("Refer to Config.py, download the datasets and insert the paths & no. of workers accordingly.\n")
         PATHS = {
             'ham10000': {
-                'base': 'INSERT PATH HERE',
-                'images_1': 'INSERT PATH HERE',
-                'images_2': 'INSERT PATH HERE',
-                'metadata': 'INSERT PATH HERE', 
+                'base'      : Path('INSERT PATH HERE'),
+                'images_1'  : Path('INSERT PATH HERE'),
+                'images_2'  : Path('INSERT PATH HERE'),
+                'metadata'  : Path('INSERT PATH HERE'), 
             },
             'isic_2019': {
-                'base': 'INSERT PATH HERE',
-                'images': 'INSERT PATH HERE',
-                'metadata': 'INSERT PATH HERE',
-                'labels': 'INSERT PATH HERE'
+                'base'      : Path('INSERT PATH HERE'),
+                'images'    : Path('INSERT PATH HERE'),
+                'metadata'  : Path('INSERT PATH HERE'),
+                'labels'    : Path('INSERT PATH HERE')
             },
             'ph2': {
-                'base': 'INSERT PATH HERE',
-                'metadata': 'INSERT PATH HERE',
-                'images': 'INSERT PATH HERE'
+                'base'      : Path('INSERT PATH HERE'),
+                'metadata'  : Path('INSERT PATH HERE'),
+                'images'    : Path('INSERT PATH HERE')
             },
             'pad_ufes_20': {
-                'base': 'INSERT PATH HERE',
-                'images_1': 'INSERT PATH HERE',
-                'images_2': 'INSERT PATH HERE',
-                'images_3': 'INSERT PATH HERE',
-                'metadata': 'INSERT PATH HERE'
+                'base'      : Path('INSERT PATH HERE'),
+                'images_1'  : Path('INSERT PATH HERE'),
+                'images_2'  : Path('INSERT PATH HERE'),
+                'images_3'  : Path('INSERT PATH HERE'),
+                'metadata'  : Path('INSERT PATH HERE')
             }
         }
-        cfg.data.num_workers = 0
-
-print(f"Number of workers set to {cfg.data.num_workers}")       
-
-detect_os_set_paths()
 
 # --- Unified class scheme (8 classes) ---
 # Maps canonical class abbreviation -> integer index
@@ -278,6 +279,11 @@ LABEL_MAPPINGS = {
         "SCC"   : "scc"
         },
 }
+
+
+
+
+
 
 # --- Unified localization scheme (11 canonical body sites) ---
 # All datasets use different terms for the same body part.

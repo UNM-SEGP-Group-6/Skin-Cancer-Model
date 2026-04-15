@@ -87,13 +87,12 @@ class SkinLesionDataset(Dataset):
         """
 
         row = self.df.iloc[idx]
-        # Load image from disk, or create black placeholder if missing
+        # Load image from disk, if missing, inform to delete and unzip for windows, if other OS/kaggle then add a line to replace with black image or skip.
         img_path = self.image_paths.get(row["image_id"])
 
         if img_path and Path(img_path).exists():
             image = Image.open(img_path).convert("RGB")
         else:
-            image = Image.new("RGB", (cfg.data.img_size, cfg.data.img_size), color="black")
             print(f"Image Missing: {row['image_id']}")
             print("It is recommended to delete the dataset and unzip it again (Would probably occur for Windows runs).")
 

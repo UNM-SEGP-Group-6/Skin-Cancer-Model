@@ -38,15 +38,18 @@ class MultimodalSkinCancerModel(nn.Module):
         # Metadata branch: small MLP to process clinical features (age, sex, localization)
         self.meta_branch = nn.Sequential(
             nn.Linear(metadata_dim, cfg.model.meta_hidden[0]),
+            nn.BatchNorm1d(cfg.model.meta_hidden[0]),
             nn.ReLU(),
             nn.Dropout(cfg.model.meta_dropout),
             nn.Linear(cfg.model.meta_hidden[0], cfg.model.meta_hidden[1]),
+            nn.BatchNorm1d(cfg.model.meta_hidden[1]),
             nn.ReLU()
         )
 
         # Fusion classifier: combines image and metadata representations
         self.classifier = nn.Sequential(
             nn.Linear(backbone_dim + cfg.model.meta_hidden[1], cfg.model.classifier_hidden),
+            nn.BatchNorm1d(cfg.model.classifier_hidden),
             nn.ReLU(),
             nn.Dropout(cfg.model.classifier_dropout),
             nn.Linear(cfg.model.classifier_hidden, num_classes)
