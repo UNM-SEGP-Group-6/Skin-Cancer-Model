@@ -73,19 +73,29 @@ def refine_mask_grabcut(image: np.ndarray, user_input, iter_count=5):
 # FEATURE EXTRACTION
 # ══════════════════════════════════════════════════════════════
 
-def compute_area(mask: np.ndarray):
-    return int(np.sum(mask > 0))
-
-
-def compute_perimeter(mask: np.ndarray):
+def compute_shape_metrics(mask: np.ndarray):
+    """
+    Calculates Area, Perimeter, and Circularity from the primary lesion body.
+    Returns a 'pristine mask' with all GrabCut background noise erased.
+    """
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    return float(sum(cv2.arcLength(cnt, True) for cnt in contours))
-
-
-def compute_circularity(area, perimeter):
-    if perimeter == 0:
-        return 0.0
-    return float((4 * np.pi * area) / (perimeter ** 2))
+    
+    if not contours:
+        return 0.0, 0.0, 0.0, mask
+        
+    # 1. Isolate the main lesion (filters out all microscopic noise dust)
+    main_contour = max(contours, key=cv2.contourArea)
+    
+    # 2. Calculate spatial metrics
+    area = cv2.contourArea(main_contour)
+    perimeter = cv2.arcLength(main_contour, True)
+    circularity = float((4 * np.pi * area) / (perimeter ** 2)) if perimeter > 0 else 0.0
+    
+    # 3. Generate a pristine, noise-free mask for downstream color/asymmetry math
+    pristine_mask = np.zeros_like(mask)
+    cv2.drawContours(pristine_mask, [main_contour], -1, 255, thickness=cv2.FILLED)
+        
+    return area, perimeter, circularity, pristine_mask
 
 
 def compute_asymmetry(mask: np.ndarray):
@@ -145,15 +155,15 @@ def extract_features(image: np.ndarray, user_input):
         dict of lesion features
     """
 
-    # Step 1 — refine segmentation
-    refined_mask = refine_mask_grabcut(image, user_input)
+    # Step 1 — refine segmentation (raw GrabCut mask with potential noise)
+    raw_mask = refine_mask_grabcut(image, user_input)
 
-    # Step 3 — compute features
-    area = compute_area(refined_mask)
-    perimeter = compute_perimeter(refined_mask)
-    circularity = compute_circularity(area, perimeter)
-    asymmetry = compute_asymmetry(refined_mask)
-    color_variance = compute_color_variance(image, refined_mask)
+    # Step 2 — compute shape metrics and extract the pristine mask
+    area, perimeter, circularity, pristine_mask = compute_shape_metrics(raw_mask)
+    
+    # Step 3 — compute asymmetry and color strictly on the pristine mask
+    asymmetry = compute_asymmetry(pristine_mask)
+    color_variance = compute_color_variance(image, pristine_mask)
 
     return {
         "area": area,
