@@ -13,3 +13,16 @@
 # Ignoring Original MRA-MIDAS implementation, References & Technical Notes
 V0.1 - MRA-MIDAS
 Misc Documents
+AGENTS.md
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# V0.2 superseded by V0.3 — keep run artifacts but ignore duplicated source
+V0.2/src/
+V0.2/SkinCancerModel_Modular.ipynb
+
+# Ignore V0.3 run artifacts (large model files tracked via gitignore above)
+/V0.3/runs
