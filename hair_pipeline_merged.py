@@ -60,7 +60,7 @@ import numpy as np
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
-from lesion_processing import extract_features
+from lesion_processing import extract_features, OtsuSegmentation
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -517,7 +517,7 @@ def process_single_image(
     # ── STAGE 2: DullRazor Hair Removal ───────────────────────────────────
     if  detection["has_hair"]:
         try:
-            should_remove, hair_pct, _diff, mask = stage2_build_hair_mask(
+            should_remove, hair_pct, _diff, hair_mask = stage2_build_hair_mask(
                 raw, removal_threshold_pct
             )
             result.hair_pct = hair_pct
@@ -530,7 +530,7 @@ def process_single_image(
 
         if  should_remove:
             try:
-                hairless = stage2_inpaint(raw, mask)
+                hairless = stage2_inpaint(raw, hair_mask)
                 result.removal_applied = True
                 result.status = "ok"
             except Exception as e:
@@ -540,41 +540,22 @@ def process_single_image(
 
     #Added the lesion processing step here to ensure it runs after hair removal and before saving the final image.
     try:
-
         h, w = hairless.shape[:2]
-
-        # Auto segmentation of lesion area using Otsu's thresholding on the hairless image.
-        #can be integrated to user defined the lesion area later on (APP interface)
-        gray = cv2.cvtColor(hairless, cv2.COLOR_BGR2GRAY)
-
-        # Adaptive thresholding
-        mask = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,21,5)
-
-        # Clean mask
-        kernel = np.ones((5,5), np.uint8)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-
-        # Find largest contour (assume lesion)
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        bbox = None
         
-        if contours:
-            c = max(contours, key=cv2.contourArea)
-            area = cv2.contourArea(c)
-
-            #  Add a sanity check to ensure the detected lesion area is within reasonable bounds (not too small or too large)
-            if area > 500 and area < (h * w * 0.7):
-                x, y, w_box, h_box = cv2.boundingRect(c)
-                bbox = (x, y, w_box, h_box)
-            
+        # Instantiate our specific strategy
+        segmenter = OtsuSegmentation()
+        bbox = segmenter.segment(hairless)
+        
         try:
             if bbox is not None: 
+                # Pass the raw bounding box directly to the updated feature extractor
                 lesion_features = extract_features(hairless, bbox)
             else:
-                raise ValueError("Invalid Bbox")
+                raise ValueError("OtsuSegmentation failed to find a valid lesion contour.")
             
-        except Exception:
+        except Exception as e:
+            result.error_msg += f" | lesion: {e}"
+            h, w = hairless.shape[:2]
             fallback_bbox = (int(w*0.3), int(h*0.3), int(w*0.4), int(h*0.4))
 
             try:
@@ -591,7 +572,7 @@ def process_single_image(
         result.lesion_area = lesion_features["area"] / (h * w)
         result.lesion_circularity = lesion_features["circularity"]
         result.lesion_asymmetry = lesion_features["asymmetry"]
-        result.lesion_color_variance = lesion_features["color_variance"]   / (255.0 ** 2)
+        result.lesion_color_variance = min(lesion_features["color_variance"] / (255.0 ** 2), 1.0)
 
     except Exception as e:
         #Log but DO NOT break pipeline
