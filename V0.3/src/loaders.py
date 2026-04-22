@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-from src.config import PATHS, LABEL_MAPPINGS, LOCALIZATION_MAPPINGS
+import src.config as src_config
 
 def _scan_images(folders, extensions=(".jpg", ".png")):
     """
@@ -39,16 +39,16 @@ def load_ham10000():
         Tuple[pd.DataFrame, dict]: (metadata DataFrame, {image_id: path} mapping).
     """
 
-    meta = pd.read_csv(PATHS["ham10000"]["metadata"])
+    meta = pd.read_csv(src_config.PATHS["ham10000"]["metadata"])
 
     # Scan both image folders for HAM10000
-    image_paths = _scan_images([PATHS["ham10000"]["images_1"], PATHS["ham10000"]["images_2"]])
+    image_paths = _scan_images([src_config.PATHS["ham10000"]["images_1"], src_config.PATHS["ham10000"]["images_2"]])
     df = meta.copy()
-    df["label"] = df["dx"].map(LABEL_MAPPINGS["ham10000"]) # Ensure we map to canonical labels
+    df["label"] = df["dx"].map(src_config.LABEL_MAPPINGS["ham10000"]) # Ensure we map to canonical labels
     df["dataset"] = "ham10000"
 
     # Standardize localization strings to unified vocabulary
-    loc_map = LOCALIZATION_MAPPINGS["ham10000"]
+    loc_map = src_config.LOCALIZATION_MAPPINGS["ham10000"]
     df["localization"] = df["localization"].str.lower().str.strip().map(
         lambda x: loc_map.get(x, "unknown") if pd.notna(x) else "unknown"
     )
@@ -68,15 +68,15 @@ def load_isic2019():
         Tuple[pd.DataFrame, dict]: (metadata DataFrame, {image_id: path} mapping).
     """
 
-    meta = pd.read_csv(PATHS["isic_2019"]["metadata"])
-    labels = pd.read_csv(PATHS["isic_2019"]["labels"])
+    meta = pd.read_csv(src_config.PATHS["isic_2019"]["metadata"])
+    labels = pd.read_csv(src_config.PATHS["isic_2019"]["labels"])
     
     # Merge metadata with one-hot ground truth labels
     df = meta.merge(labels, on="image")
 
     # Determine label from the one-hot columns
     class_cols = [c for c in ["MEL", "NV", "BCC", "AK", "BKL", "DF", "VASC", "SCC"] if c in df.columns]
-    df["label"] = df[class_cols].idxmax(axis=1).map(LABEL_MAPPINGS["isic_2019"])
+    df["label"] = df[class_cols].idxmax(axis=1).map(src_config.LABEL_MAPPINGS["isic_2019"])
     df["image_id"] = df["image"]
     df["dataset"] = "isic_2019"
 
@@ -85,14 +85,14 @@ def load_isic2019():
     if "sex" not in df.columns: df["sex"] = np.nan
 
     # Standardize localization strings to unified vocabulary
-    loc_map = LOCALIZATION_MAPPINGS["isic_2019"]
+    loc_map = src_config.LOCALIZATION_MAPPINGS["isic_2019"]
     raw_loc = df.get("anatom_site_general", pd.Series(dtype=str))
     df["localization"] = raw_loc.str.lower().str.strip().map(
         lambda x: loc_map.get(x, "unknown") if pd.notna(x) else "unknown"
     )
 
     # Scan image directory
-    image_paths = _scan_images([PATHS["isic_2019"]["images"]])
+    image_paths = _scan_images([src_config.PATHS["isic_2019"]["images"]])
 
     # Strip _downsampled suffix if present in filenames
     extra = {k.replace("_downsampled", ""): v for k, v in image_paths.items() if "_downsampled" in k}
@@ -114,12 +114,12 @@ def load_ph2():
     """
 
     # PH2 metadata starts at row 12 in the Excel file
-    ph2_excel = pd.read_excel(PATHS["ph2"]["metadata"], header=12)
+    ph2_excel = pd.read_excel(src_config.PATHS["ph2"]["metadata"], header=12)
     ph2_excel.columns = ["image_name", "histological_diagnosis", "common_nevus", "atypical_nevus", "melanoma",
                          "asymmetry", "pigment_network", "dots_globules", "streaks", "regression_areas",
                          "blue_whitish_veil", "white", "colors", "col13", "col14", "col15", "col16"]
     samples, image_paths = [], {}
-    base = PATHS["ph2"]["images"]
+    base = src_config.PATHS["ph2"]["images"]
     for _, row in ph2_excel.iterrows():
         img_id = row["image_name"]
         if pd.isna(img_id): continue
@@ -148,12 +148,12 @@ def load_pad_ufes20():
         Tuple[pd.DataFrame, dict]: (metadata DataFrame, {image_id: path} mapping).
     """
 
-    meta = pd.read_csv(PATHS["pad_ufes_20"]["metadata"])
-    label_map = LABEL_MAPPINGS["pad_ufes_20"]
+    meta = pd.read_csv(src_config.PATHS["pad_ufes_20"]["metadata"])
+    label_map = src_config.LABEL_MAPPINGS["pad_ufes_20"]
     
     # Scan all three image folders (supports .png and .jpg)
     all_imgs = _scan_images(
-        [PATHS["pad_ufes_20"]["images_1"], PATHS["pad_ufes_20"]["images_2"], PATHS["pad_ufes_20"]["images_3"]],
+        [src_config.PATHS["pad_ufes_20"]["images_1"], src_config.PATHS["pad_ufes_20"]["images_2"], src_config.PATHS["pad_ufes_20"]["images_3"]],
         extensions=(".png", ".jpg")
     )
 

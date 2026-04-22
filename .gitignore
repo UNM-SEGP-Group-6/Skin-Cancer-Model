@@ -26,3 +26,4 @@ V0.2/SkinCancerModel_Modular.ipynb
 
 # Ignore V0.3 run artifacts (large model files tracked via gitignore above)
 /V0.3/runs
+/V0.4

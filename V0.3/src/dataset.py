@@ -93,6 +93,7 @@ class SkinLesionDataset(Dataset):
         if img_path and Path(img_path).exists():
             image = Image.open(img_path).convert("RGB")
         else:
+            image = Image.new("RGB", (cfg.data.img_size, cfg.data.img_size), color="black")
             print(f"Image Missing: {row['image_id']}")
             print("It is recommended to delete the dataset and unzip it again (Would probably occur for Windows runs).")
 
