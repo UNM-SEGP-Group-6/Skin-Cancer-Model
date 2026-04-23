@@ -170,7 +170,7 @@ The model follows a **late fusion** design:
 
 | Feature                   | Detail                                                                                                      |
 |---------------------------|-------------------------------------------------------------------------------------------------------------|
-| **Backbone**              | `efficientnet_b1` via [`timm`](https://github.com/huggingface/pytorch-image-models), pretrained on ImageNet |
+| **Backbone**              | `efficientnet_bx` via [`timm`](https://github.com/huggingface/pytorch-image-models), pretrained on ImageNet |
 | **Fusion**                | Late fusion — image and metadata branches are concatenated before the classifier                            |
 | **Backbone freezing**     | Frozen for the first N epochs (warmup), then unfrozen with differential learning rates                      |
 | **Loss function**         | Focal Loss with label smoothing, inverse-frequency class weights for imbalance handling                     |
@@ -181,20 +181,27 @@ The model follows a **late fusion** design:
 
 ## Datasets
 
-| Dataset                                                                                     | Domain                | Classes | Approx. Size | Role                          |
-|---------------------------------------------------------------------------------------------|-----------------------|---------|--------------|-------------------------------|
-| [HAM10000](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/DBW86T) | Dermoscopic           | 7       | ~10,015      | Training pool                 |
-| [ISIC 2019](https://challenge.isic-archive.com/data/#2019)                                  | Dermoscopic           | 8       | ~25,331      | Training pool                 |
-| [PH2](https://www.fc.up.pt/addi/ph2%20database.html)                                        | Dermoscopic           | 2       | 200          | External test (same modality) |
-| [PAD-UFES-20](https://data.mendeley.com/datasets/zr7vgbcyr2/1)                              | Clinical / Smartphone | 6       | ~2,298       | External test (domain shift)  |
-
-> **Split strategy:** HAM10000 + ISIC 2019 form the training pool (70/15/15 train/val/test). PH2 and PAD-UFES-20 are **held out entirely** as external cross-dataset evaluation sets.
+| Dataset                                                                                     | Domain                | Classes | Approx. Size |
+|---------------------------------------------------------------------------------------------|-----------------------|---------|--------------|
+| [HAM10000](https://www.kaggle.com/datasets/kmader/skin-cancer-mnist-ham10000) | Dermoscopic           | 7       | ~10,015      |
+| [ISIC 2019](https://www.kaggle.com/datasets/salviohexia/isic-2019-skin-lesion-images-for-classification)                                  | Dermoscopic           | 8       | ~25,331      |
+| [PH2](https://www.kaggle.com/datasets/spacesurfer/ph2-dataset)                                        | Dermoscopic           | 2       | 200          |
+| [PAD-UFES-20](https://www.kaggle.com/datasets/mahdavi1202/skin-cancer)                     | Clinical / Smartphone | 6       | ~2,298       |
+| [MRA-MIDAS](https://aimi.stanford.edu/datasets/mra-midas-Multimodal-Image-Dataset-for-AI-based-Skin-Cancer)                                | Clinical / Smartphone | 13      | ~2,913       |
 
 ---
 
 ## Class Scheme
 
-All datasets are mapped to a **unified 8-class scheme**:
+- V0.4 datasets are mapped to a **3-class scheme**:
+
+| Word         | Meaning                                                   |
+|--------------|-----------------------------------------------------------|
+| `benign`     | No cause of concern                                       |
+| `malignant`  | Requires further care                                     |
+| `uncertain`  | Uncertain                                                 |
+
+- While V0.3 follows this **unified class scheme**:
 
 | Abbreviation | Full Name                  | Category    |
 |--------------|----------------------------|-------------|
