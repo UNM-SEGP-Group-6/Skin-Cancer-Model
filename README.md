@@ -74,27 +74,75 @@ The expected folder structure under `DATA_ROOT`:
 
 ```
 datasets/
-├── HAM10000/
-│   ├── HAM10000_metadata.csv
-│   ├── HAM10000_images_part_1/
-│   └── HAM10000_images_part_2/
-├── ISIC2019/
-│   ├── ISIC_2019_Training_Metadata.csv
-│   ├── ISIC_2019_Training_GroundTruth.csv
-│   └── ISIC_2019_Training_Input/
-├── PH2Dataset/
-│   └── PH2Dataset/
-│       ├── PH2_dataset.xlsx
-│       └── PH2 Dataset images/
-└── PAD-UFES-20/
-    ├── metadata.csv
-    ├── imgs_part_1/
-    ├── imgs_part_2/
-    └── imgs_part_3/
+├── [dataset-name]/
+│   ├── [dataset-name]/metadata.csv
+│   └── [dataset-name]/[images!]
+└── [dataset-name2]/
+    └── [dataset-name2]/
+        ├── [dataset-name2]_dataset.xlsx
+        └── [dataset-name2] Dataset images/
+
 ```
 
 > **Kaggle / Colab:** Dataset paths are auto-configured — no manual path setup needed. The config detects the runtime environment and sets paths accordingly except for the MRA-MIDAS Dataset which needs to be manually configured as it's not available in Kaggle.
 
+<details>
+<summary><strong>MRA-MIDAS Dataset Installation Instruction</strong></summary>
+
+### Dataset Instructions:
+1. Acquire the Dataset link from [here](https://aimi.stanford.edu/datasets/mra-midas-Multimodal-Image-Dataset-for-AI-based-Skin-Cancer).
+2. Download AZCopy from [here](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10?tabs=windows).
+3. Open Command Prompt as Administrator.
+4. Navigate to the directory where AZCopy is installed.
+5. Run the following command: 
+    ```
+    azcopy login
+    ```
+6. You'll be prompted to visit [https://microsoft.com/devicelogin](https://microsoft.com/devicelogin) and enter a unique code to authenticate.
+7. Run the following command: 
+    ```
+    azcopy copy "MRA-MIDAS Link" "C:Destination/Local/Path" --recursive=true.
+    ```
+8. It should output the following: 
+    ```
+    INFO: Scanning...
+    INFO: Any empty folders will not be processed, because source and/or destination doesn't have full folder support
+
+    Job [UniqueID] has started
+    Log file is located at: C:\Destination/Local/Path/UniqueID.log
+    ```
+9. Once all the files are downloaded you should receive the following output:
+    ```
+    100.0 %, 3418 Done, 0 Failed, 0 Pending, 0 Skipped, 3418 Total,                                   
+
+
+    Job [UniqueID] summary
+    Elapsed Time (Minutes): [Time]
+    Number of File Transfers: 3418
+    Number of Folder Property Transfers: 0
+    Number of Symlink Transfers: 0
+    Total Number of Transfers: 3418
+    Number of File Transfers Completed: 3418
+    Number of Folder Transfers Completed: 0
+    Number of File Transfers Failed: 0
+    Number of Folder Transfers Failed: 0
+    Number of File Transfers Skipped: 0
+    Number of Folder Transfers Skipped: 0
+    Number of Symbolic Links Skipped: 0
+    Number of Hardlinks Converted: 0
+    Number of Special Files Skipped: 0
+    Total Number of Bytes Transferred: 3807825722
+    Final Job Status: Completed
+    ```
+
+    ### References & Guides:
+    - https://aimi.stanford.edu/datasets/mra-midas-Multimodal-Image-Dataset-for-AI-based-Skin-Cancer
+    - https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10
+
+    ### Troubleshooting:
+    - If the AIMI link doesn't load or proceed to the next step try using a different browser due to encountered issues with Microsoft Edge.
+
+</details>
 
 ---
 
@@ -105,7 +153,7 @@ The model follows a **late fusion** design:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│  Image ──► EfficientNet-Bx (frozen → unfrozen) ──► x-d          │
+│  Image ──► EfficientNet-Bx (frozen → unfrozen) ──►   x-d        │
 │                                                       │         │
 │                                                    Concat       │
 │                                                       │         │

@@ -26,4 +26,4 @@ V0.2/SkinCancerModel_Modular.ipynb
 
 # Ignore V0.3 run artifacts (large model files tracked via gitignore above)
 /V0.3/runs
-/V0.4
+V0.4/missing_images_mra_midas.txt
